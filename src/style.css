@@ -1,0 +1,1138 @@
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+  background: transparent;
+  user-select: none;
+  cursor: default;
+  font-family: "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+}
+
+/* 宠物舞台：155 宽的精灵图贴在 180×200 的盒子里，盒心即窗口坐标 (x, y)。
+   z-index 要高过状态面板，否则悬停弹出面板时会把头顶的气泡盖住 */
+#pet {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 156px;
+  height: 200px;
+  margin-left: -78px;
+  margin-top: -100px;
+  z-index: 99;
+  will-change: transform;
+}
+
+/* 荡秋千的绳子：单独铺满整窗，两端的坐标每帧重算，用的就是窗口坐标 */
+.rope {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 98;
+  pointer-events: none;
+}
+
+.rope.hidden {
+  display: none;
+}
+
+.rope-line {
+  fill: none;
+  stroke: #b07b4a;
+  stroke-width: 3;
+  stroke-linecap: round;
+}
+
+.rope-grip {
+  fill: #8d5f36;
+  stroke: #fff8ef;
+  stroke-width: 1.6;
+}
+
+#pet-body {
+  position: absolute;
+  inset: 0;
+  transform-origin: 50% 82%;
+  animation: breathe 3.6s ease-in-out infinite;
+}
+
+#pet-lean {
+  position: absolute;
+  inset: 0;
+  will-change: transform;
+}
+
+/* 两层精灵图交叉淡入淡出，姿势切换时不会硬跳 */
+.pet-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  -webkit-user-drag: none;
+  filter: drop-shadow(0 6px 9px rgba(40, 32, 45, 0.3));
+  transition: opacity 0.16s ease;
+}
+
+.pet-img.show {
+  opacity: 1;
+}
+
+#shadow {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  width: 118px;
+  height: 15px;
+  margin-left: -59px;
+  border-radius: 50%;
+  background: radial-gradient(ellipse at center, rgba(40, 32, 45, 0.32), rgba(40, 32, 45, 0) 72%);
+}
+
+/* ---- 动作 ---- */
+
+#pet-body.state-walk {
+  animation: walk 0.36s ease-in-out infinite;
+}
+
+#pet-body.state-jump {
+  animation: jump 0.7s cubic-bezier(0.3, 0.75, 0.35, 1);
+}
+
+#pet-body.state-happy {
+  animation: happy 0.52s ease-out;
+}
+
+#pet-body.state-sleep {
+  animation: breathe 5.2s ease-in-out infinite;
+}
+
+/* 附加形变单独一层，不和上面的呼吸/走路动画抢 transform */
+#pet-anim {
+  position: absolute;
+  inset: 0;
+}
+
+/* 动态形变层：拖拽倾斜、落地挤压、待机小动作，按帧写内联 transform。
+   支点压在脚上，压扁时脚不会离地 */
+#pet-tilt {
+  position: absolute;
+  inset: 0;
+  transform-origin: 50% 88%;
+  will-change: transform;
+}
+
+#pet-anim.state-sleep {
+  transform: rotate(-6deg) scale(0.97);
+}
+
+#pet-anim.state-sleep .pet-img {
+  filter: drop-shadow(0 4px 7px rgba(40, 32, 45, 0.25)) brightness(0.9) saturate(0.88);
+}
+
+@keyframes breathe {
+  0%,
+  100% {
+    transform: scale(1, 1);
+  }
+  50% {
+    transform: scale(1.022, 0.982);
+  }
+}
+
+@keyframes walk {
+  0%,
+  100% {
+    transform: translateY(0) scale(1, 1);
+  }
+  25% {
+    transform: translateY(-8px) scale(1.02, 0.99);
+  }
+  50% {
+    transform: translateY(0) scale(0.99, 1.02);
+  }
+  75% {
+    transform: translateY(-8px) scale(1.02, 0.99);
+  }
+}
+
+@keyframes jump {
+  0% {
+    transform: translateY(0) scale(1, 1);
+  }
+  18% {
+    transform: translateY(0) scale(1.12, 0.88);
+  }
+  52% {
+    transform: translateY(-60px) scale(0.95, 1.08);
+  }
+  82% {
+    transform: translateY(0) scale(1.08, 0.92);
+  }
+  100% {
+    transform: translateY(0) scale(1, 1);
+  }
+}
+
+@keyframes happy {
+  0% {
+    transform: scale(1, 1);
+  }
+  30% {
+    transform: scale(1.11, 0.9);
+  }
+  62% {
+    transform: scale(0.96, 1.05);
+  }
+  100% {
+    transform: scale(1, 1);
+  }
+}
+
+/* ---- 气泡 ---- */
+
+.bubble {
+  position: absolute;
+  left: 50%;
+  bottom: 100%;
+  margin-bottom: 4px;
+  transform: translateX(-50%);
+  /* max-width 不写 width 的话，气泡只能长到「父容器剩余宽度」那么宽，
+     因为 #pet 只有 156px，中文又能随便断行，结果会被压成一条窄条 */
+  width: max-content;
+  max-width: 240px;
+  padding: 9px 14px;
+  border-radius: 14px;
+  background: #ffffff;
+  color: #3d2e26;
+  font-size: 13px;
+  line-height: 1.45;
+  text-align: center;
+  /* 天气和新闻会带换行 */
+  white-space: pre-line;
+  box-shadow: 0 6px 18px rgba(50, 40, 60, 0.18);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.bubble::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -6px;
+  width: 12px;
+  height: 12px;
+  margin-left: -6px;
+  background: #ffffff;
+  transform: rotate(45deg);
+  border-radius: 2px;
+}
+
+.bubble.hidden {
+  opacity: 0;
+  transform: translateX(-50%) translateY(6px);
+  pointer-events: none;
+}
+
+/* ---- 睡觉的 Z ---- */
+
+.zzz {
+  position: absolute;
+  right: 6px;
+  top: 8px;
+  color: #6b6f80;
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  transition: opacity 0.2s ease;
+}
+
+/* 少了这条，没睡觉的时候也会一直挂着 "z" */
+.zzz.hidden {
+  opacity: 0;
+  visibility: hidden;
+}
+
+.zzz span {
+  animation: zzz 2.4s ease-in-out infinite;
+}
+
+.zzz span:nth-child(2) {
+  animation-delay: 0.6s;
+}
+
+.zzz span:nth-child(3) {
+  animation-delay: 1.2s;
+}
+
+@keyframes zzz {
+  0% {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  40% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+}
+
+/* ---- 右键菜单 ----
+   这里只放「跟它玩」的动作；开关、专注、退出都归托盘菜单 */
+
+.menu {
+  position: fixed;
+  z-index: 100;
+  width: 254px;
+  padding: 8px;
+  border-radius: 16px;
+  background: linear-gradient(180deg, #fffefb 0%, #fff8f1 100%);
+  box-shadow:
+    0 0 0 1px rgba(120, 92, 70, 0.08),
+    0 2px 6px rgba(60, 45, 35, 0.08),
+    0 18px 36px -10px rgba(60, 45, 35, 0.32);
+  font-size: 12px;
+  color: #3d2e26;
+  transform-origin: top left;
+  transition: opacity 0.13s ease, transform 0.13s ease;
+  /* 菜单项不少，1080p 以外的小屏上留一道滚动的后路 */
+  max-height: calc(100vh - 12px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.menu.hidden {
+  opacity: 0;
+  transform: translateY(-5px) scale(0.98);
+  pointer-events: none;
+  visibility: hidden;
+}
+
+.menu::-webkit-scrollbar {
+  width: 6px;
+}
+
+.menu::-webkit-scrollbar-thumb {
+  border-radius: 3px;
+  background: #e8dfd5;
+}
+
+.menu-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 8px;
+  border-radius: 9px;
+  background: #f7f3ee;
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: background 0.12s ease, box-shadow 0.12s ease, color 0.12s ease;
+}
+
+.menu-item .ico {
+  flex: none;
+  width: 15px;
+  font-size: 12px;
+  line-height: 1;
+  text-align: center;
+}
+
+.menu-item:hover {
+  background: #ffffff;
+  box-shadow: 0 2px 8px rgba(80, 58, 42, 0.13);
+}
+
+/* 分组标题：小字 + 一条渐隐的线，把长菜单切成几段 */
+.menu-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 4px 5px;
+  color: #a08d7c;
+  font-size: 10.5px;
+  letter-spacing: 0.4px;
+}
+
+.menu-group::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, #ece2d8, rgba(236, 226, 216, 0));
+}
+
+/* 城市 / 频道 / 活动这类多项选择，排成格子省地方 */
+.menu-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 3px;
+}
+
+.menu-grid.two {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.menu-grid.three {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+/* 城市名都是两个字，一排放五个也看得清 */
+.menu-grid.five {
+  grid-template-columns: repeat(5, 1fr);
+}
+
+.menu-grid + .menu-grid {
+  margin-top: 3px;
+}
+
+.menu-grid .menu-item {
+  justify-content: center;
+  padding: 7px 4px;
+}
+
+/* 城市和频道只包住文字，选中时才是一个紧凑的胶囊 */
+.menu-grid.five .menu-item,
+#channel-list .menu-item {
+  justify-self: center;
+  padding: 7px 9px;
+}
+
+/* 频道只有两个，排成居中的一组更像分段选择 */
+#channel-list {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+}
+
+#channel-list .menu-item {
+  padding: 7px 16px;
+}
+
+/* 头三个最常用，图标压在字上面，点起来更好找 */
+.menu-grid.hero .menu-item {
+  flex-direction: column;
+  gap: 5px;
+  padding: 9px 4px 8px;
+  font-size: 11.5px;
+}
+
+.menu-grid.hero .ico {
+  width: auto;
+  font-size: 17px;
+}
+
+/* 城市和频道是「选一个」，底色要比动作按钮轻 */
+#city-list .menu-item,
+#channel-list .menu-item {
+  background: transparent;
+  color: #6b5a4d;
+}
+
+#city-list .menu-item:hover,
+#channel-list .menu-item:hover {
+  background: #f2ece5;
+  box-shadow: none;
+}
+
+.menu-grid .menu-item.on,
+#city-list .menu-item.on,
+#channel-list .menu-item.on {
+  background: #2f8f66;
+  color: #ffffff;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(47, 143, 102, 0.32);
+}
+
+.menu-item[data-locate] {
+  justify-content: flex-start;
+  padding-left: 10px;
+}
+
+.menu-hint {
+  margin-top: 9px;
+  padding-top: 8px;
+  border-top: 1px solid #efe5da;
+  color: #b3a294;
+  font-size: 10px;
+  text-align: center;
+  letter-spacing: 0.3px;
+}
+
+/* ---- 番茄钟胶囊 ---- */
+
+.timer {
+  position: absolute;
+  left: 50%;
+  top: 100%;
+  margin-top: -10px;
+  transform: translateX(-50%);
+  padding: 3px 10px;
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.95);
+  color: #3d2e26;
+  font-size: 11px;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+  box-shadow: 0 3px 10px rgba(40, 30, 25, 0.2);
+  transition: opacity 0.2s ease;
+}
+
+.timer.hidden {
+  opacity: 0;
+  visibility: hidden;
+}
+
+/* ---- 爱心特效 ---- */
+
+.heart {
+  position: absolute;
+  left: 50%;
+  top: 24%;
+  color: #ff7d94;
+  font-size: 17px;
+  pointer-events: none;
+  animation: heart-up 1.1s ease-out forwards;
+}
+
+@keyframes heart-up {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, 0) scale(0.5);
+  }
+  25% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50px) scale(1.15);
+  }
+}
+
+/* ---- 状态面板 ---- */
+
+.panel {
+  position: fixed;
+  z-index: 98;
+  width: 196px;
+  padding: 11px 13px 10px;
+  border-radius: 12px;
+  background: #ffffff;
+  box-shadow: 0 10px 30px rgba(40, 30, 25, 0.24);
+  font-size: 12px;
+  color: #3d2e26;
+  transition: opacity 0.12s ease;
+}
+
+.panel.hidden {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+/* 小尖角指向宠物 */
+.panel::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -6px;
+  width: 12px;
+  height: 12px;
+  margin-left: -6px;
+  background: #ffffff;
+  transform: rotate(45deg);
+  border-radius: 2px;
+}
+
+.panel.below::after {
+  bottom: auto;
+  top: -6px;
+}
+
+.panel-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 9px;
+}
+
+.panel-title {
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.panel-tier {
+  color: #8a8f9e;
+  font-size: 11px;
+}
+
+/* 面板顶上的天气条 */
+.wx-line {
+  margin: -3px 0 9px;
+  padding: 5px 8px;
+  border-radius: 7px;
+  background: #f4f7fb;
+  color: #4a6b8a;
+  font-size: 11px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.stat-row {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-bottom: 7px;
+}
+
+.stat-name {
+  width: 28px;
+  color: #6b7080;
+}
+
+.bar {
+  flex: 1;
+  height: 7px;
+  border-radius: 4px;
+  background: #eef0f5;
+  overflow: hidden;
+}
+
+.bar i {
+  display: block;
+  height: 100%;
+  width: 0;
+  border-radius: 4px;
+  transition: width 0.35s ease;
+}
+
+#bar-food {
+  background: #f0a04b;
+}
+
+#bar-mood {
+  background: #e8748f;
+}
+
+#bar-energy {
+  background: #4fb894;
+}
+
+#bar-bond {
+  background: #8a7fe0;
+}
+
+#bar-cpu {
+  background: #4aa8a0;
+}
+
+#bar-mem {
+  background: #8a93a6;
+}
+
+.stat-row.sys .stat-name,
+.stat-row.sys .stat-num {
+  color: #9aa0ae;
+}
+
+.stat-num {
+  width: 26px;
+  text-align: right;
+  color: #6b7080;
+  font-variant-numeric: tabular-nums;
+}
+
+.panel-foot {
+  margin-top: 2px;
+  padding-top: 7px;
+  border-top: 1px solid #eef0f5;
+  color: #9aa0ae;
+  font-size: 11px;
+}
+
+/* ---- 猜拳小游戏 ---- */
+
+.game {
+  position: fixed;
+  z-index: 100;
+  width: 190px;
+  padding: 11px 13px 10px;
+  border-radius: 12px;
+  background: #ffffff;
+  box-shadow: 0 10px 30px rgba(40, 30, 25, 0.24);
+  font-size: 12px;
+  color: #3d2e26;
+  text-align: center;
+  transition: opacity 0.12s ease;
+}
+
+.game.hidden {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.game-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.game-title {
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.game-close {
+  padding: 0 2px;
+  color: #9aa0ae;
+  font-size: 15px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.game-close:hover {
+  color: #d9534f;
+}
+
+.game-stage {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin: 6px 0;
+}
+
+.game-fist {
+  font-size: 25px;
+  line-height: 1;
+}
+
+.game-vs {
+  color: #b6bcc9;
+  font-size: 11px;
+}
+
+.game-result {
+  min-height: 17px;
+  margin-bottom: 8px;
+  color: #6b7080;
+  line-height: 1.4;
+}
+
+.game-btns {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4px;
+}
+
+.game-btn {
+  padding: 6px 0;
+  border: 1px solid #e2e5ee;
+  border-radius: 8px;
+  background: #f7f8fc;
+  color: #3d2e26;
+  font-family: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.game-btn:hover {
+  background: #eef1f8;
+  border-color: #ccd3e4;
+}
+
+.game-foot {
+  margin-top: 8px;
+  color: #9aa0ae;
+  font-size: 11px;
+}
+
+/* ---- 桌面图标挑选面板 ---- */
+
+.picker {
+  position: fixed;
+  z-index: 100;
+  width: 218px;
+  padding: 11px 13px 10px;
+  border-radius: 12px;
+  background: #ffffff;
+  box-shadow: 0 10px 30px rgba(40, 30, 25, 0.24);
+  font-size: 12px;
+  color: #3d2e26;
+  transition: opacity 0.12s ease;
+}
+
+.picker.hidden {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.picker-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.picker-title {
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.picker-close {
+  padding: 0 2px;
+  color: #9aa0ae;
+  font-size: 15px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.picker-close:hover {
+  color: #d9534f;
+}
+
+/* 桌面上的东西可能几十个，列表给个上限让它自己滚 */
+.picker-list {
+  max-height: 214px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.picker-item {
+  padding: 5px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.picker-item:hover {
+  background: #f2f3f7;
+}
+
+.picker-empty {
+  padding: 6px 8px;
+  color: #9aa0ae;
+}
+
+.picker-foot {
+  margin-top: 8px;
+  color: #9aa0ae;
+  font-size: 11px;
+  line-height: 1.45;
+  word-break: break-all;
+}
+
+/* ---- 吃之前问一句的确认按钮 ---- */
+
+.choice {
+  position: fixed;
+  z-index: 100;
+  display: flex;
+  gap: 6px;
+  padding: 7px;
+  border-radius: 10px;
+  background: #ffffff;
+  box-shadow: 0 10px 30px rgba(40, 30, 25, 0.24);
+  transition: opacity 0.12s ease;
+}
+
+.choice.hidden {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.choice-btn {
+  padding: 5px 13px;
+  border: 1px solid #e2e5ee;
+  border-radius: 8px;
+  background: #f7f8fc;
+  color: #3d2e26;
+  font-family: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.choice-btn:hover {
+  background: #eef1f8;
+  border-color: #ccd3e4;
+}
+
+.choice-btn.ok {
+  background: #ffeacb;
+  border-color: #f0cd98;
+}
+
+.choice-btn.ok:hover {
+  background: #ffe1b4;
+}
+
+/* ---- 生活道具（宠物自己钓鱼 / 吃饭 / 打盹 / 发呆时出现） ---- */
+
+#prop-back,
+#prop-front {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+#prop-front {
+  z-index: 2;
+}
+
+.prop {
+  position: absolute;
+  overflow: visible;
+}
+
+.prop-fishing {
+  right: -86px;
+  bottom: 2px;
+  width: 132px;
+  height: 164px;
+}
+
+.prop-fishing .rod {
+  fill: none;
+  stroke: #a07a52;
+  stroke-width: 4;
+  stroke-linecap: round;
+}
+
+.prop-fishing .line {
+  fill: none;
+  stroke: #c3cad6;
+  stroke-width: 1.4;
+}
+
+.prop-fishing .water {
+  fill: rgba(122, 178, 226, 0.4);
+}
+
+.prop-fishing .float {
+  fill: #f0605c;
+  animation: bob-float 2.4s ease-in-out infinite;
+}
+
+.prop-bowl {
+  left: 50%;
+  bottom: -8px;
+  width: 58px;
+  height: 42px;
+  margin-left: -29px;
+}
+
+.prop-bowl .bowl {
+  fill: #f4f6fa;
+  stroke: #d3d8e2;
+  stroke-width: 1.6;
+}
+
+.prop-bowl .food {
+  fill: #f0a04b;
+}
+
+.prop-bed {
+  left: 50%;
+  bottom: -10px;
+  width: 152px;
+  height: 98px;
+  margin-left: -76px;
+}
+
+.prop-bed .quilt {
+  fill: #dbe6f6;
+  stroke: #bccbe2;
+  stroke-width: 1.8;
+}
+
+.prop-bed .hem {
+  fill: #eef4fc;
+  stroke: #bccbe2;
+  stroke-width: 1.8;
+}
+
+.prop-bed .fold {
+  fill: none;
+  stroke: #c6d3e6;
+  stroke-width: 1.6;
+  opacity: 0.7;
+}
+
+.prop-daze {
+  left: 50%;
+  top: -4px;
+  width: 66px;
+  height: 26px;
+  margin-left: 12px;
+}
+
+.prop-daze circle {
+  fill: #9aa0ae;
+  animation: daze-dot 1.6s ease-in-out infinite;
+}
+
+.prop-daze circle:nth-child(2) {
+  animation-delay: 0.22s;
+}
+
+.prop-daze circle:nth-child(3) {
+  animation-delay: 0.44s;
+}
+
+@keyframes daze-dot {
+  0%,
+  100% {
+    opacity: 0.25;
+    transform: translateY(0);
+  }
+  50% {
+    opacity: 1;
+    transform: translateY(-4px);
+  }
+}
+
+/* ---- 天气彩蛋：下雪围围巾、下雨打伞、大热天扇扇子 ---- */
+
+.prop-umbrella {
+  left: 50%;
+  top: -30px;
+  width: 110px;
+  height: 92px;
+  margin-left: -55px;
+  transform-origin: 50% 90%;
+  animation: umbrella-sway 3.6s ease-in-out infinite;
+}
+
+.prop-umbrella .canopy {
+  fill: #f4a259;
+  stroke: #d9822b;
+  stroke-width: 2;
+  stroke-linejoin: round;
+}
+
+.prop-umbrella .shaft {
+  fill: none;
+  stroke: #a07a52;
+  stroke-width: 3.4;
+  stroke-linecap: round;
+}
+
+.prop-scarf {
+  left: 50%;
+  bottom: 52px;
+  width: 92px;
+  height: 34px;
+  margin-left: -46px;
+}
+
+.prop-scarf .scarf,
+.prop-scarf .scarf-tail {
+  fill: #e2646a;
+  stroke: #c94b52;
+  stroke-width: 1.8;
+  stroke-linejoin: round;
+}
+
+.prop-fan {
+  right: -24px;
+  bottom: 60px;
+  width: 84px;
+  height: 54px;
+  transform-origin: 50% 96%;
+  animation: fan-wave 1.1s ease-in-out infinite;
+}
+
+.prop-fan .leaf {
+  fill: rgba(255, 233, 186, 0.92);
+  stroke: #e0b878;
+  stroke-width: 1.6;
+  stroke-linejoin: round;
+}
+
+.prop-fan .rib {
+  fill: none;
+  stroke: #cfa970;
+  stroke-width: 1.2;
+}
+
+@keyframes umbrella-sway {
+  0%,
+  100% {
+    transform: rotate(-3deg);
+  }
+  50% {
+    transform: rotate(3deg);
+  }
+}
+
+@keyframes fan-wave {
+  0%,
+  100% {
+    transform: rotate(-7deg);
+  }
+  50% {
+    transform: rotate(7deg);
+  }
+}
+
+@keyframes bob-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+/* 吃东西时的咀嚼抖动 */
+#pet-anim.state-chew {
+  animation: chew 0.26s ease-in-out infinite;
+}
+
+@keyframes chew {
+  0%,
+  100% {
+    transform: scale(1, 1);
+  }
+  50% {
+    transform: scale(1.05, 0.96);
+  }
+}
+
+/* 钻进被窝：整体下沉一点 */
+#pet-anim.state-nap {
+  animation: none;
+  transform: translateY(14px) rotate(-4deg);
+}
+
+/* ---- 撞墙眩晕 ---- */
+
+#pet-anim.state-dizzy {
+  animation: dizzy 0.55s ease-in-out 3;
+}
+
+@keyframes dizzy {
+  0%,
+  100% {
+    transform: rotate(-5deg);
+  }
+  50% {
+    transform: rotate(5deg);
+  }
+}

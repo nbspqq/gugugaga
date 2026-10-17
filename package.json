@@ -1,0 +1,66 @@
+{
+  "name": "desktop-pet",
+  "version": "1.0.0",
+  "description": "一只住在桌面上的咕嘎",
+  "productName": "DesktopPet",
+  "main": "main.js",
+  "private": true,
+  "author": "baozi",
+  "license": "Apache-2.0",
+  "scripts": {
+    "start": "electron .",
+    "icon": "python tools/make-tray-icon.py",
+    "dist": "electron-builder --win",
+    "dist:portable": "electron-builder --win portable",
+    "dist:installer": "electron-builder --win nsis"
+  },
+  "build": {
+    "appId": "com.baozi.desktoppet",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "system-monitor.js",
+      "net-service.js",
+      "weather.js",
+      "desktop-icons.js",
+      "src/**/*",
+      "assets/pet-penguin-*.png",
+      "assets/tray.png"
+    ],
+    "win": {
+      "icon": "assets/icon.ico",
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "咕嘎"
+    },
+    "portable": {
+      "artifactName": "DesktopPet-Portable-${version}.exe"
+    }
+  },
+  "devDependencies": {
+    "electron": "^44.7.2",
+    "electron-builder": "^26.15.3"
+  }
+}

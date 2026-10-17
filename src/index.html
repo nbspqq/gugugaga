@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' file:; style-src 'self' file: 'unsafe-inline'; img-src 'self' file: data:;" />
+  <title>咕嘎</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body class="theme-penguin">
+  <div id="pet">
+    <div id="shadow"></div>
+    <div id="prop-back"></div>
+
+    <div id="pet-body">
+      <div id="pet-anim">
+        <div id="pet-tilt">
+          <div id="pet-lean">
+            <img class="pet-img show" id="pet-img-a" src="../assets/pet-penguin-open.png" alt="" draggable="false" />
+            <img class="pet-img" id="pet-img-b" src="../assets/pet-penguin-open.png" alt="" draggable="false" />
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="prop-front"></div>
+    <div id="bubble" class="bubble hidden"></div>
+    <div id="timer" class="timer hidden"></div>
+    <div id="zzz" class="zzz hidden">Z<span>z</span><span>z</span></div>
+  </div>
+
+  <!-- 荡秋千的绳子：支点在鼠标上，坐标就是窗口坐标 -->
+  <svg id="rope" class="rope hidden" xmlns="http://www.w3.org/2000/svg">
+    <path id="rope-line" class="rope-line" d="" />
+    <circle id="rope-grip" class="rope-grip" cx="-40" cy="-40" r="5" />
+  </svg>
+
+  <div id="panel" class="panel hidden">
+    <div class="panel-head">
+      <span class="panel-title">咕嘎的状态</span>
+      <span class="panel-tier" id="tier-name">刚认识</span>
+    </div>
+    <div class="wx-line" id="wx-line">天气 --</div>
+    <div class="stat-row">
+      <span class="stat-name">饱食</span>
+      <span class="bar"><i id="bar-food"></i></span>
+      <span class="stat-num" id="num-food">0</span>
+    </div>
+    <div class="stat-row">
+      <span class="stat-name">心情</span>
+      <span class="bar"><i id="bar-mood"></i></span>
+      <span class="stat-num" id="num-mood">0</span>
+    </div>
+    <div class="stat-row">
+      <span class="stat-name">精力</span>
+      <span class="bar"><i id="bar-energy"></i></span>
+      <span class="stat-num" id="num-energy">0</span>
+    </div>
+    <div class="stat-row">
+      <span class="stat-name">亲密</span>
+      <span class="bar"><i id="bar-bond"></i></span>
+      <span class="stat-num" id="num-bond">0</span>
+    </div>
+    <div class="stat-row sys">
+      <span class="stat-name">CPU</span>
+      <span class="bar"><i id="bar-cpu"></i></span>
+      <span class="stat-num" id="num-cpu">--</span>
+    </div>
+    <div class="stat-row sys">
+      <span class="stat-name">内存</span>
+      <span class="bar"><i id="bar-mem"></i></span>
+      <span class="stat-num" id="num-mem">--</span>
+    </div>
+    <div class="panel-foot" id="panel-foot">光标停在它脚上就能看状态</div>
+  </div>
+
+  <div id="game" class="game hidden">
+    <div class="game-head">
+      <span class="game-title">石头剪刀布</span>
+      <span class="game-close" data-action="close-game">×</span>
+    </div>
+    <div class="game-stage">
+      <span class="game-fist" id="rps-pet">✊</span>
+      <span class="game-vs">VS</span>
+      <span class="game-fist" id="rps-you">?</span>
+    </div>
+    <div class="game-result" id="rps-result">出个拳吧</div>
+    <div class="game-btns">
+      <button class="game-btn" data-rps="rock">石头</button>
+      <button class="game-btn" data-rps="scissors">剪刀</button>
+      <button class="game-btn" data-rps="paper">布</button>
+    </div>
+    <div class="game-foot" id="rps-score">还没玩过</div>
+  </div>
+
+  <div id="menu" class="menu hidden">
+    <div class="menu-grid three hero">
+      <div class="menu-item" data-action="say-hi"><span class="ico">👋</span><span class="lbl">打招呼</span></div>
+      <div class="menu-item" data-action="jump"><span class="ico">⬆️</span><span class="lbl">跳一下</span></div>
+      <div class="menu-item" data-action="sleep"><span class="ico">😴</span><span class="lbl">睡一会儿</span></div>
+    </div>
+    <div class="menu-grid three">
+      <div class="menu-item" data-action="play"><span class="ico">✨</span>陪它玩</div>
+      <div class="menu-item" data-action="rps"><span class="ico">✊</span>猜拳</div>
+      <div class="menu-item" data-toggle="swing"><span class="ico">🪂</span>荡秋千</div>
+    </div>
+
+    <div class="menu-group">让它自己…</div>
+    <div class="menu-grid two">
+      <div class="menu-item" data-activity="fish"><span class="ico">🎣</span>去钓鱼</div>
+      <div class="menu-item" data-activity="wander"><span class="ico">🚶</span>溜达一圈</div>
+      <div class="menu-item" data-activity="nap"><span class="ico">🛏️</span>钻进被窝</div>
+      <div class="menu-item" data-activity="daze"><span class="ico">💤</span>发会儿呆</div>
+    </div>
+
+    <div class="menu-group">喂点吃的</div>
+    <div class="menu-grid three">
+      <div class="menu-item" data-food="fish"><span class="ico">🐟</span>小鱼干</div>
+      <div class="menu-item" data-food="pudding"><span class="ico">🍮</span>布丁</div>
+      <div class="menu-item" data-food="apple"><span class="ico">🍎</span>苹果</div>
+    </div>
+    <div class="menu-grid two">
+      <div class="menu-item" data-action="eat-icon"><span class="ico">🖥️</span>喂桌上图标</div>
+      <div class="menu-item" data-action="belly"><span class="ico">🔍</span>看看肚子里</div>
+    </div>
+
+    <div class="menu-group">看看外面</div>
+    <div class="menu-grid two">
+      <div class="menu-item" data-action="weather"><span class="ico">☀️</span>今天天气</div>
+      <div class="menu-item" data-action="news"><span class="ico">📰</span>念条新闻</div>
+    </div>
+
+    <div class="menu-group">天气城市</div>
+    <div class="menu-item" data-locate="1"><span class="ico">📍</span>自动定位</div>
+    <div class="menu-grid five" id="city-list"></div>
+
+    <div class="menu-group">资讯频道</div>
+    <div class="menu-grid two" id="channel-list"></div>
+
+    <div class="menu-hint">开关、专注和退出都在托盘图标上</div>
+  </div>
+
+  <div id="picker" class="picker hidden">
+    <div class="picker-head">
+      <span class="picker-title" id="picker-title">桌上有什么</span>
+      <span class="picker-close" data-action="close-picker">×</span>
+    </div>
+    <div class="picker-list" id="picker-list"></div>
+    <div class="picker-foot" id="picker-foot"></div>
+  </div>
+
+  <div id="choice" class="choice hidden">
+    <button class="choice-btn ok" id="choice-ok">好</button>
+    <button class="choice-btn" id="choice-cancel">算了</button>
+  </div>
+
+  <script src="game.js"></script>
+  <script src="renderer.js"></script>
+</body>
+</html>
