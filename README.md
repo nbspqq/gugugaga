@@ -6,6 +6,15 @@
 
 <img src="assets/pet-penguin-open.png" width="170" alt="咕嘎">
 
+## 装一个玩
+
+不想碰代码的话，去 [Releases](https://github.com/nbspqq/gugugaga/releases/latest) 下个 exe 就行：
+
+- **DesktopPet-Setup-1.0.0.exe** —— 安装版，可以选目录，装完桌面和开始菜单有「咕嘎」
+- **DesktopPet-Portable-1.0.0.exe** —— 免安装单文件，双击直接跑
+
+Windows x64，不用装 Node.js。安装包没有代码签名证书，SmartScreen 会提示「已保护你的电脑」，点 **更多信息 → 仍要运行** 即可。
+
 ## 它能干什么
 
 **右键它**
@@ -29,7 +38,7 @@
 
 食物、心情、精力、亲密度四条状态，加上总亲密度决定的称呼：刚认识 → 有点熟 → 好朋友 → 挚友。不同阶段台词不一样。放置太久会自己睡着，饿了（开了自动啃桌面的话）会去桌上找东西吃。
 
-## 跑起来
+## 从源码跑
 
 需要 Node.js 18+ 和 Windows。
 
@@ -48,7 +57,7 @@ npm run dist
 
 ## 数据放在哪
 
-- **养成进度**：`%APPDATA%\desktop-pet` 下的 localStorage，删掉等于重新认识
+- **养成进度**：`%APPDATA%\DesktopPet` 下的 localStorage，删掉等于重新认识
 - **吃掉的桌面图标**：`我的文档\咕嘎的肚子`。是搬走不是删除，随时能吐回去
 
 ## 项目结构
