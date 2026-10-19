@@ -1,6 +1,6 @@
 name: build
 
-# 打 tag 时自动构建三平台并挂到 Release；平时可以在 Actions 页面手动跑
+# 打 tag 时三平台一起构建并挂到 Release；平时可以在 Actions 页面手动跑
 on:
   workflow_dispatch:
   push:
@@ -11,6 +11,22 @@ env:
   CSC_IDENTITY_AUTO_DISCOVERY: 'false'
 
 jobs:
+  win:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx electron-builder --win --publish never
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows
+          path: dist/*.exe
+          if-no-files-found: error
+
   mac:
     runs-on: macos-latest
     steps:
@@ -49,7 +65,7 @@ jobs:
 
   release:
     if: startsWith(github.ref, 'refs/tags/')
-    needs: [mac, linux]
+    needs: [win, mac, linux]
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -59,4 +75,61 @@ jobs:
           path: artifacts
       - uses: softprops/action-gh-release@v2
         with:
+          name: 咕嘎 ${{ github.ref_name }}
           files: artifacts/**/*
+          fail_on_unmatched_files: true
+          body: |
+            三平台的安装包都在下面的 Assets 里，同一版本、同一套代码构建。
+
+            ## 下载哪个
+
+            **Windows x64**
+
+            - `DesktopPet-Setup-*.exe` —— 安装版，推荐。可以选安装目录，装完桌面和开始菜单会有「咕嘎」。
+            - `DesktopPet-Portable-*.exe` —— 免安装单文件，双击就跑，适合拷给别人或者放 U 盘。
+
+            **macOS**
+
+            - `*-arm64.dmg` —— Apple 芯片（M1 及以后）
+            - `*-x64.dmg` —— Intel 芯片
+
+            **Linux x64**
+
+            - `*.AppImage` —— 不挑发行版，`chmod +x` 之后直接运行
+            - `*.deb` —— Debian / Ubuntu，`sudo apt install ./DesktopPet-*.deb`
+
+            所有包都不用装 Node.js 或任何运行库。
+
+            ## 安装前说明
+
+            **Windows**：没有代码签名证书，SmartScreen 会提示「Windows 已保护你的电脑」。点 **更多信息** → **仍要运行**。
+
+            **macOS**：没有 Apple 开发者签名，也没做公证，系统会说「无法验证开发者」。右键点图标 → **打开** → 再点一次「打开」。或者执行：
+
+            ```bash
+            xattr -dr com.apple.quarantine /Applications/DesktopPet.app
+            ```
+
+            **Linux**：托盘图标依赖 AppIndicator，GNOME 上可能要装 `gnome-shell-extension-appindicator`。点击穿透在 Wayland 下不生效，需要在登录界面切到 X11。
+
+            ## 这一版有什么
+
+            **右键企鹅** —— 打招呼、跳一下、睡一会儿、陪它玩、猜拳、荡秋千、去钓鱼、溜达一圈、钻进被窝、发会儿呆、喂小鱼干 / 布丁 / 苹果、喂桌上图标、看看肚子里、今天天气、念条新闻。
+
+            **托盘图标** —— 跟着鼠标走、挂在鼠标上荡秋千、专注 25 分钟、每日天气简报、定时念新闻、喝水提醒、整点报时、关注电脑状态、饿了自己啃桌面、暂停自动活动。
+
+            **养成** —— 食物、心情、精力、亲密度四条状态，四档称呼（刚认识 → 有点熟 → 好朋友 → 挚友），放置太久会自己睡着。
+
+            **手感** —— 拖动时身体朝反方向甩，抛出去会被拉长，落地压扁回弹；闲着每 8-17 秒自己歪头、抖身、伸懒腰、探头。荡秋千是单摆物理，支点用弹簧跟随光标，所以鼠标甩得越急它荡得越高。
+
+            ## 数据在哪
+
+            - 养成进度：Windows `%APPDATA%\DesktopPet`、macOS `~/Library/Application Support/DesktopPet`、Linux `~/.config/DesktopPet`，删掉等于重新认识
+            - 吃掉的桌面图标：文档目录下的 `咕嘎的肚子`，是搬走不是删除，随时能吐回去
+
+            ## 已知限制
+
+            - macOS 和 Linux 的包没有真机长期跑过，Windows 是最稳的
+            - Linux 的点击穿透依赖 X11，Wayland 下失效
+            - 天气、定位、新闻走免费公开接口，可能限流，连不上时用缓存的上一条
+            - 只有一张企鹅皮，换装还没做
