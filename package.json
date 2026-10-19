@@ -56,6 +56,7 @@
       ]
     },
     "nsis": {
+      "artifactName": "DesktopPet-Setup-${version}.${ext}",
       "oneClick": false,
       "perMachine": false,
       "allowToChangeInstallationDirectory": true,

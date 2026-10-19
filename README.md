@@ -12,20 +12,20 @@
 
 **Windows x64**
 
-- **DesktopPet-Setup-1.0.0.exe** —— 安装版，可以选目录，装完桌面和开始菜单有「咕嘎」
-- **DesktopPet-Portable-1.0.0.exe** —— 免安装单文件，双击直接跑
+- **DesktopPet-Setup-1.0.1.exe** —— 安装版，可以选目录，装完桌面和开始菜单有「咕嘎」
+- **DesktopPet-Portable-1.0.1.exe** —— 免安装单文件，双击直接跑
 
 **macOS**（Intel 选 x64，Apple 芯片选 arm64）
 
-- **DesktopPet-1.0.0-x64.dmg** / **DesktopPet-1.0.0-arm64.dmg**
+- **DesktopPet-1.0.1-x64.dmg** / **DesktopPet-1.0.1-arm64.dmg**
 
 没有签名和公证，第一次打开要绕一下：右键点图标 → **打开** → 再点「打开」。或者执行
 `xattr -dr com.apple.quarantine /Applications/DesktopPet.app`。
 
 **Linux x64**（Ubuntu 20.04+、Debian 11+ 之类）
 
-- **DesktopPet-1.0.0-x86_64.AppImage** —— `chmod +x` 之后直接运行，不挑发行版
-- **DesktopPet-1.0.0-amd64.deb** —— `sudo apt install ./DesktopPet-1.0.0-amd64.deb`
+- **DesktopPet-1.0.1-x86_64.AppImage** —— `chmod +x` 之后直接运行，不挑发行版
+- **DesktopPet-1.0.1-amd64.deb** —— `sudo apt install ./DesktopPet-1.0.1-amd64.deb`
 
 Linux 的托盘图标依赖桌面的 AppIndicator 支持，GNOME 上可能需要装 `gnome-shell-extension-appindicator`。
 
