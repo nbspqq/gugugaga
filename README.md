@@ -24,8 +24,8 @@
 
 **Linux x64**（Ubuntu 20.04+、Debian 11+ 之类）
 
-- **DesktopPet-1.0.0-x64.AppImage** —— `chmod +x` 之后直接运行，不挑发行版
-- **DesktopPet-1.0.0-x64.deb** —— `sudo apt install ./DesktopPet-1.0.0-x64.deb`
+- **DesktopPet-1.0.0-x86_64.AppImage** —— `chmod +x` 之后直接运行，不挑发行版
+- **DesktopPet-1.0.0-amd64.deb** —— `sudo apt install ./DesktopPet-1.0.0-amd64.deb`
 
 Linux 的托盘图标依赖桌面的 AppIndicator 支持，GNOME 上可能需要装 `gnome-shell-extension-appindicator`。
 
@@ -114,6 +114,7 @@ src/renderer.js    渲染层：动作状态机、物理、菜单、气泡
 ## 已知限制
 
 - Windows / macOS / Linux 都出了包，但只在 Windows 上真机跑过。macOS 和 Linux 缺签名和公证，首次打开要手动放行。
+- Linux 的点击穿透靠 `setIgnoreMouseEvents`，Wayland 会话下不生效；要在 Wayland 上用，登录时切到 X11。
 - 桌面图标的排列位置是按 Windows 的网格估的，macOS 和 Linux 上图标位置会有偏差（投喂功能本身可用）。
 - 天气走 open-meteo、定位走 ipinfo、新闻走少数派 RSS 和 Hacker News API，都是免费接口，可能限流或连不上；连不上时会用缓存的上一条。
 - 只有一张企鹅皮，换装功能还没做。
