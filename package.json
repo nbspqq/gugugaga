@@ -70,7 +70,8 @@
       "icon": "assets/icon.png",
       "category": "public.app-category.entertainment",
       "artifactName": "DesktopPet-${version}-${arch}.${ext}",
-      "identity": null,
+      "identity": "-",
+      "hardenedRuntime": false,
       "target": [
         {
           "target": "dmg",
