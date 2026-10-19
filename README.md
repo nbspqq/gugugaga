@@ -1,6 +1,6 @@
 # 咕嘎 · gugugaga
 
-一只住在 Windows 桌面上的小企鹅。
+一只住在桌面上的小企鹅，Windows / macOS / Linux 都能跑。
 
 透明窗口、永远置顶、不占任务栏，平时待在屏幕角落自己发呆。摸它会歪头，拖着它会甩来甩去，右键能陪它玩。基于 Electron，全部逻辑在一个渲染进程里，没有服务器依赖。
 
@@ -8,12 +8,28 @@
 
 ## 装一个玩
 
-不想碰代码的话，去 [Releases](https://github.com/nbspqq/gugugaga/releases/latest) 下个 exe 就行：
+不想碰代码的话，去 [Releases](https://github.com/nbspqq/gugugaga/releases/latest) 下载对应平台的包：
+
+**Windows x64**
 
 - **DesktopPet-Setup-1.0.0.exe** —— 安装版，可以选目录，装完桌面和开始菜单有「咕嘎」
 - **DesktopPet-Portable-1.0.0.exe** —— 免安装单文件，双击直接跑
 
-Windows x64，不用装 Node.js。安装包没有代码签名证书，SmartScreen 会提示「已保护你的电脑」，点 **更多信息 → 仍要运行** 即可。
+**macOS**（Intel 选 x64，Apple 芯片选 arm64）
+
+- **DesktopPet-1.0.0-x64.dmg** / **DesktopPet-1.0.0-arm64.dmg**
+
+没有签名和公证，第一次打开要绕一下：右键点图标 → **打开** → 再点「打开」。或者执行
+`xattr -dr com.apple.quarantine /Applications/DesktopPet.app`。
+
+**Linux x64**（Ubuntu 20.04+、Debian 11+ 之类）
+
+- **DesktopPet-1.0.0-x64.AppImage** —— `chmod +x` 之后直接运行，不挑发行版
+- **DesktopPet-1.0.0-x64.deb** —— `sudo apt install ./DesktopPet-1.0.0-x64.deb`
+
+Linux 的托盘图标依赖桌面的 AppIndicator 支持，GNOME 上可能需要装 `gnome-shell-extension-appindicator`。
+
+安装包没有代码签名证书，Windows 的 SmartScreen 会提示「已保护你的电脑」，点 **更多信息 → 仍要运行** 即可。
 
 ## 它能干什么
 
@@ -40,25 +56,38 @@ Windows x64，不用装 Node.js。安装包没有代码签名证书，SmartScree
 
 ## 从源码跑
 
-需要 Node.js 18+ 和 Windows。
+需要 Node.js 18+。三个平台都能跑：
 
 ```bash
 npm install
 npm start
 ```
 
-打包成安装包 / 便携版：
+打包：
 
 ```bash
-npm run dist
+npm run dist:win     # Windows：NSIS 安装包 + 便携版
+npm run dist:mac     # macOS：dmg + zip（x64 / arm64）
+npm run dist:linux   # Linux：AppImage + deb
 ```
 
-产物在 `dist/`。托盘图标可以重新生成：`npm run icon`（要 Python + Pillow）。
+产物在 `dist/`（可以用 `--config.directories.output=xxx` 换个目录）。
+
+**macOS 的包必须在 macOS 上打**，Windows 和 Linux 不能交叉构建；仓库里配了 GitHub Actions（`.github/workflows/build.yml`），打 tag 或手动触发就会在真机上构建三平台并附到 Release。
+
+托盘图标可以重新生成：`npm run icon`（要 Python + Pillow）。
 
 ## 数据放在哪
 
-- **养成进度**：`%APPDATA%\DesktopPet` 下的 localStorage，删掉等于重新认识
-- **吃掉的桌面图标**：`我的文档\咕嘎的肚子`。是搬走不是删除，随时能吐回去
+养成进度存在系统的应用数据目录里，删掉等于重新认识：
+
+| 平台 | 位置 |
+|---|---|
+| Windows | `%APPDATA%\DesktopPet` |
+| macOS | `~/Library/Application Support/DesktopPet` |
+| Linux | `~/.config/DesktopPet` |
+
+吃掉的桌面图标在「文档」目录下的 `咕嘎的肚子`（Windows 是 `我的文档\咕嘎的肚子`）。是搬走不是删除，随时能吐回去。
 
 ## 项目结构
 
@@ -84,7 +113,8 @@ src/renderer.js    渲染层：动作状态机、物理、菜单、气泡
 
 ## 已知限制
 
-- 只在 Windows 上试过。桌面图标的格子和「我的文档」路径都是按 Windows 写的。
+- Windows / macOS / Linux 都出了包，但只在 Windows 上真机跑过。macOS 和 Linux 缺签名和公证，首次打开要手动放行。
+- 桌面图标的排列位置是按 Windows 的网格估的，macOS 和 Linux 上图标位置会有偏差（投喂功能本身可用）。
 - 天气走 open-meteo、定位走 ipinfo、新闻走少数派 RSS 和 Hacker News API，都是免费接口，可能限流或连不上；连不上时会用缓存的上一条。
 - 只有一张企鹅皮，换装功能还没做。
 

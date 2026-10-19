@@ -13,6 +13,11 @@ const monitor = createMonitor({ interval: 1500, windowSize: 20 });
 // 天气 / 资讯都走这里，结果在服务里缓存
 const net = createService({ timeout: 9000 });
 
+// Linux 的透明窗口依赖合成器，得显式打开这个开关，不然背景是黑的
+if (process.platform === 'linux') {
+  app.commandLine.appendSwitch('enable-transparent-visuals');
+}
+
 let win = null;
 let tray = null;
 let cursorTimer = null;
@@ -65,6 +70,10 @@ function createWindow() {
   });
 
   win.setAlwaysOnTop(true, 'screen-saver');
+  // macOS 上跟着切换桌面走，全屏应用时也留在上面
+  if (process.platform === 'darwin') {
+    win.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
+  }
   win.setIgnoreMouseEvents(true, { forward: true });
   interactive = false;
 
@@ -245,7 +254,12 @@ function buildTrayMenu() {
 
 function createTray() {
   const icon = nativeImage.createFromPath(path.join(__dirname, 'assets', 'tray.png'));
-  tray = new Tray(icon);
+  if (process.platform === 'darwin') {
+    // mac 菜单栏要单色模板图，跟着明暗主题自动反色
+    tray = new Tray(nativeImage.createFromPath(path.join(__dirname, 'assets', 'trayTemplate.png')));
+  } else {
+    tray = new Tray(icon);
+  }
   tray.setToolTip('咕嘎 · 桌面宠物');
   tray.on('double-click', togglePet);
   buildTrayMenu();
@@ -279,6 +293,10 @@ ipcMain.handle('pet:data', async (_event, payload) => {
 
 function desktopDirs() {
   const home = app.getPath('home');
+  if (process.platform !== 'win32') {
+    // mac 和 Linux 只有用户自己的桌面
+    return icons.desktopDirs(path.join(home, 'Desktop'), null);
+  }
   const pub = process.env.PUBLIC || 'C:\\Users\\Public';
   return icons.desktopDirs(path.join(home, 'Desktop'), path.join(pub, 'Desktop'));
 }
@@ -375,6 +393,8 @@ if (!gotLock) {
   app.on('second-instance', showPet);
 
   app.whenReady().then(() => {
+    // 桌宠不进 Dock / 应用切换器
+    if (process.platform === 'darwin' && app.dock) app.dock.hide();
     createWindow();
     createTray();
   });

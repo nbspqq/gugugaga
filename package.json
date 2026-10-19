@@ -5,12 +5,18 @@
   "productName": "DesktopPet",
   "main": "main.js",
   "private": true,
-  "author": "baozi",
+  "author": {
+    "name": "baozi",
+    "email": "2692908265@qq.com"
+  },
   "license": "Apache-2.0",
   "scripts": {
     "start": "electron .",
     "icon": "python tools/make-tray-icon.py",
     "dist": "electron-builder --win",
+    "dist:win": "electron-builder --win",
+    "dist:mac": "electron-builder --mac",
+    "dist:linux": "electron-builder --linux",
     "dist:portable": "electron-builder --win portable",
     "dist:installer": "electron-builder --win nsis"
   },
@@ -28,7 +34,9 @@
       "desktop-icons.js",
       "src/**/*",
       "assets/pet-penguin-*.png",
-      "assets/tray.png"
+      "assets/tray.png",
+      "assets/trayTemplate.png",
+      "assets/trayTemplate@2x.png"
     ],
     "win": {
       "icon": "assets/icon.ico",
@@ -57,6 +65,51 @@
     },
     "portable": {
       "artifactName": "DesktopPet-Portable-${version}.exe"
+    },
+    "mac": {
+      "icon": "assets/icon.png",
+      "category": "public.app-category.entertainment",
+      "artifactName": "DesktopPet-${version}-${arch}.${ext}",
+      "identity": null,
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        },
+        {
+          "target": "zip",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        }
+      ],
+      "extendInfo": {
+        "LSUIElement": true
+      }
+    },
+    "linux": {
+      "icon": "assets/icon.png",
+      "category": "Utility",
+      "synopsis": "一只住在桌面上的咕嘎",
+      "artifactName": "DesktopPet-${version}-${arch}.${ext}",
+      "target": [
+        {
+          "target": "AppImage",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "deb",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
     }
   },
   "devDependencies": {
